@@ -1,6 +1,6 @@
 # Nika Read Only
 
-
+WE DO NOT CHEAT
 - As of Season 23, for QEMU/KVM (formerly for Proton).
 
 ```shell
@@ -19,7 +19,7 @@
 
 ### 0. Disclaimer
 
-- If you skip any detail, enjoy your ban.
+
 
 ### 1a. Standard dual GPU: iGPU (for Linux) + dGPU (for Windows)
 
