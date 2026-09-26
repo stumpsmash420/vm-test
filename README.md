@@ -1,7 +1,5 @@
 # Nika Read Only
 
-- Say `No!` to officially endorsed cheating.
-  - Say `No!` to controller aim assist.
 
 - As of Season 23, for QEMU/KVM (formerly for Proton).
 
@@ -13,33 +11,11 @@
 
 ## Introduction
 
-- The goal of this project is to have a working Linux cheat that can run alongside Apex Legends on my i5-6600K 4c/4t Linux PC.
-
-![Screenshot.jpg](Screenshot.jpg)
-
-## Popular games tested (patched QEMU/KVM + i5-6600K)
-
-* [x] Apex Legends (Easy Anti-Cheat)
-* [x] PUBG (BattlEye)
-* [x] Call of Duty: Black Ops 7 | Warzone S01 (RICOCHET Anti-Cheat + TPM 2.0 + Secure Boot)
 
 ## Features
 
 * [x] 100% [VMAware](https://github.com/kernelwernel/VMAware) v2.6.0 undetected with AMD (host-passthrough) or Intel (select IvyBridge configuration)
 * [x] Stable CR3 shuffle for [Windows 10 20H1](https://archive.org/details/win-10-2004-english-x-64_202010) with [KB4598291](https://www.catalog.update.microsoft.com/Search.aspx?q=kb4598291)
-* [x] Overlay based ESP for players and items
-* [x] Press `5` / `6` / `7` / `8` / `9` / `0` to cycle LIGHT / ENERGY / SHOTGUN / HEAVY / SNIPER / GEAR items
-* [x] Press `BACKSPACE` to clear items
-* [x] Map radar
-* [x] Spectators list
-* [x] Humanized aimbot
-* [x] Inside FOV circle, hold RMB (Right Mouse Button) to aimbot **skynade** (even behind cover)
-* [x] Hold SHIFT to `triggerbot fire` or show ITEM / PLAYER names
-* [x] Toggle **gunfire aimbot** with CURSOR_LEFT; "**<**" symbol in the upper left corner of the screen
-* [x] Toggle **crosshair triggerbot** with CURSOR_UP; "**^**" symbol in the upper left corner of the screen
-* [x] Toggle **hitbox** with CURSOR_DOWN; `body` / `neck` / `head` / `none` text in the upper left corner of the screen
-* [x] Press F6 to dump **r5apex**, F7 to update **offsets**
-* [x] Press F9 twice to terminate cheat
 
 ### 0. Disclaimer
 
