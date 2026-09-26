@@ -5,8 +5,8 @@
  };
  
 -#define KVM_IOAPIC_NUM_PINS  24
-+//#define KVM_IOAPIC_NUM_PINS  24  /* NIKA removed */
-+#define KVM_IOAPIC_NUM_PINS  32  /* NIKA added */
++//#define KVM_IOAPIC_NUM_PINS  24  /* me removed */
++#define KVM_IOAPIC_NUM_PINS  32  /* me added */
  struct kvm_ioapic_state {
  	__u64 base_address;
  	__u32 ioregsel;
@@ -29,8 +29,8 @@
  
  /* 14 is the version for Xeon and Pentium 8.4.8*/
 -#define APIC_VERSION			0x14UL
-+//#define APIC_VERSION			0x14UL  /* NIKA removed */
-+#define APIC_VERSION			0x15UL  /* NIKA added */
++//#define APIC_VERSION			0x14UL  /* me removed */
++#define APIC_VERSION			0x15UL  /* me added */
  #define LAPIC_MMIO_LENGTH		(1 << 12)
  
  /*
@@ -40,7 +40,7 @@
  	mov %r15, VCPU_R15(%_ASM_AX)
  #endif
  
-+#if 1  // NIKA begin
++#if 1  // me begin
 +	mov %_ASM_AX, %_ASM_DI                                  /* RDI = &vcpu->arch.regs */
 +//	mov %_ASM_DI, %_ASM_SI                                  /* RSI = &vcpu->arch.regs */
 +//	sub $OFFSET_KVM_VCPU_ARCH_REGS, %_ASM_SI                /* RSI = struct kvm_vcpu * (or struct vcpu_vmx *) */
@@ -228,7 +228,7 @@
 +	ja .Lreload_and_reenter             /* Branches if CF == 0 AND ZF == 0, VMWRITE success */
 +
 +.Lfastpath_slowpath:
-+#endif  // NIKA end
++#endif  // me end
 +
  	/* Clear return value to indicate VM-Exit (as opposed to VM-Fail). */
  	xor %ebx, %ebx
@@ -239,7 +239,7 @@
  
  #include "mmu/spte.h"
  
-+struct host_ds_area {  // NIKA begin
++struct host_ds_area {  // me begin
 +	u64 bts_buffer_base;
 +	u64 bts_index;
 +	u64 bts_absolute_maximum;
@@ -249,17 +249,17 @@
 +	u64 pebs_absolute_maximum;
 +	u64 pebs_interrupt_threshold;
 +	u64 pebs_counter_reset[4];
-+} __attribute__((packed));  // NIKA end
++} __attribute__((packed));  // me end
 +
-+struct host_ds_env {  // NIKA begin
++struct host_ds_env {  // me begin
 +	struct host_ds_area *ds_area;
 +	void *bts_buffer;
-+};  // NIKA end
++};  // me end
 +
 +/* Allocates one instance of struct host_ds_env for every logical CPU core */
-+static DEFINE_PER_CPU(struct host_ds_env, ds_env_on_cpu);  // NIKA added
++static DEFINE_PER_CPU(struct host_ds_env, ds_env_on_cpu);  // me added
 +
-+int create_dummy_ds_area(struct host_ds_env *ds_env)  // NIKA begin
++int create_dummy_ds_area(struct host_ds_env *ds_env)  // me begin
 +{
 +	// 1. Allocate 1 page for the BTS trace records
 +	ds_env->bts_buffer = (void *)__get_free_page(GFP_KERNEL | __GFP_ZERO);
@@ -279,9 +279,9 @@
 +	// 4. Write the linear address to the hardware MSR
 +	wrmsrq(0x600, (u64)ds_env->ds_area);  // MSR_IA32_DS_AREA
 +	return 0;
-+}  // NIKA end
++}  // me end
 +
-+void destroy_dummy_ds_area(struct host_ds_env *ds_env)  // NIKA begin
++void destroy_dummy_ds_area(struct host_ds_env *ds_env)  // me begin
 +{
 +	wrmsrq(0x600, 0);  // MSR_IA32_DS_AREA
 +	if (ds_env->ds_area) {
@@ -292,7 +292,7 @@
 +		free_page((unsigned long)ds_env->bts_buffer);
 +		ds_env->bts_buffer = NULL;
 +	}
-+}  // NIKA end
++}  // me end
 +
  MODULE_AUTHOR("Qumranet");
  MODULE_DESCRIPTION("KVM support for VMX (Intel VT-x) extensions");
@@ -302,8 +302,8 @@
  
  	eb = (1u << PF_VECTOR) | (1u << UD_VECTOR) | (1u << MC_VECTOR) |
 -	     (1u << DB_VECTOR) | (1u << AC_VECTOR);
-+//	     (1u << AC_VECTOR);  // NIKA include for #DB
-+	     (1u << DB_VECTOR) | (1u << AC_VECTOR);  // NIKA exclude for #DB
++//	     (1u << AC_VECTOR);  // me include for #DB
++	     (1u << DB_VECTOR) | (1u << AC_VECTOR);  // me exclude for #DB
  	/*
  	 * #VE isn't used for VMX.  To test against unexpected changes
  	 * related to #VE for VMX, intercept unexpected #VE and warn on it.
@@ -311,7 +311,7 @@
  u64 vmx_get_supported_debugctl(struct kvm_vcpu *vcpu, bool host_initiated)
  {
  	u64 debugctl = 0;
-+	debugctl |= DEBUGCTLMSR_BTF;  // NIKA added
++	debugctl |= DEBUGCTLMSR_BTF;  // me added
  
  	if (boot_cpu_has(X86_FEATURE_BUS_LOCK_DETECT) &&
  	    (host_initiated || guest_cpu_cap_has(vcpu, X86_FEATURE_BUS_LOCK_DETECT)))
@@ -319,10 +319,10 @@
  
  	intel_pt_handle_vmx(1);
  
-+	create_dummy_ds_area(&per_cpu(ds_env_on_cpu, cpu));  // NIKA added
++	create_dummy_ds_area(&per_cpu(ds_env_on_cpu, cpu));  // me added
  	r = kvm_cpu_vmxon(phys_addr);
  	if (r) {
-+		destroy_dummy_ds_area(&per_cpu(ds_env_on_cpu, cpu));  // NIKA added
++		destroy_dummy_ds_area(&per_cpu(ds_env_on_cpu, cpu));  // me added
  		intel_pt_handle_vmx(0);
  		return r;
  	}
@@ -330,7 +330,7 @@
  
  	if (kvm_cpu_vmxoff())
  		kvm_spurious_fault();
-+	destroy_dummy_ds_area(&per_cpu(ds_env_on_cpu, raw_smp_processor_id()));  // NIKA added
++	destroy_dummy_ds_area(&per_cpu(ds_env_on_cpu, raw_smp_processor_id()));  // me added
  
  	hv_reset_evmcs();
  
@@ -339,11 +339,11 @@
  		vmx_disable_intercept_for_msr(vcpu, MSR_CORE_C7_RESIDENCY, MSR_TYPE_R);
  	}
 -	if (kvm_aperfmperf_in_guest(vcpu->kvm)) {
-+//	if (kvm_aperfmperf_in_guest(vcpu->kvm)) {  // NIKA removed
++//	if (kvm_aperfmperf_in_guest(vcpu->kvm)) {  // me removed
  		vmx_disable_intercept_for_msr(vcpu, MSR_IA32_APERF, MSR_TYPE_R);
  		vmx_disable_intercept_for_msr(vcpu, MSR_IA32_MPERF, MSR_TYPE_R);
 -	}
-+//	}  // NIKA removed
++//	}  // me removed
 +	// VGK_IA32_PMC0 ... VGK_IA32_PMC7
 +	for (u32 msr = 0xC1; msr <= 0xC8; msr++) vmx_disable_intercept_for_msr(vcpu, msr, MSR_TYPE_RW); //!
 +	// VGK_IA32_PERFEVTSEL0 ... VGK_IA32_PERFEVTSEL7
@@ -378,7 +378,7 @@
  			  CPU_BASED_NMI_WINDOW_EXITING);
  
 -	if (vmx->vcpu.arch.switch_db_regs & KVM_DEBUGREG_WONT_EXIT)
-+	if (vmx->vcpu.arch.switch_db_regs & KVM_DEBUGREG_WONT_EXIT)  // NIKA exclude for MOV DR
++	if (vmx->vcpu.arch.switch_db_regs & KVM_DEBUGREG_WONT_EXIT)  // me exclude for MOV DR
  		exec_control &= ~CPU_BASED_MOV_DR_EXITING;
  
  	if (!cpu_need_tpr_shadow(&vmx->vcpu))
@@ -386,7 +386,7 @@
  				CPU_BASED_MONITOR_EXITING);
  	if (kvm_hlt_in_guest(vmx->vcpu.kvm))
  		exec_control &= ~CPU_BASED_HLT_EXITING;
-+	exec_control &= ~CPU_BASED_RDPMC_EXITING;  // NIKA added
++	exec_control &= ~CPU_BASED_RDPMC_EXITING;  // me added
  	return exec_control;
  }
  
@@ -396,8 +396,8 @@
  
 -	vcpu->arch.switch_db_regs &= ~KVM_DEBUGREG_WONT_EXIT;
 -	exec_controls_setbit(to_vmx(vcpu), CPU_BASED_MOV_DR_EXITING);
-+	vcpu->arch.switch_db_regs &= ~KVM_DEBUGREG_WONT_EXIT;  // NIKA exclude for MOV DR
-+	exec_controls_setbit(to_vmx(vcpu), CPU_BASED_MOV_DR_EXITING);  // NIKA exclude for MOV DR
++	vcpu->arch.switch_db_regs &= ~KVM_DEBUGREG_WONT_EXIT;  // me exclude for MOV DR
++	exec_controls_setbit(to_vmx(vcpu), CPU_BASED_MOV_DR_EXITING);  // me exclude for MOV DR
  
  	/*
  	 * exc_debug expects dr6 to be cleared after it runs, avoid that it sees
@@ -405,7 +405,7 @@
  				     vmx_get_msr_imm_reg(vcpu));
  }
  
-+static int handle_cpuid(struct kvm_vcpu *vcpu)  // NIKA begin
++static int handle_cpuid(struct kvm_vcpu *vcpu)  // me begin
 +{
 +	u32 eax, ebx, ecx, edx, in_eax, in_ecx;
 +//	if (cpuid_fault_enabled(vcpu) && !kvm_require_cpl(vcpu, 0))
@@ -465,7 +465,7 @@
 +		vcpu->ext_cpuid_cache[in_eax][in_ecx].edx = edx;
 +	}
 +	return kvm_skip_emulated_instruction(vcpu);
-+}  // NIKA end
++}  // me end
 +
  /*
   * The exit handlers return 1 if the exit was handled fully and guest execution
@@ -475,8 +475,8 @@
  	[EXIT_REASON_CR_ACCESS]               = handle_cr,
  	[EXIT_REASON_DR_ACCESS]               = handle_dr,
 -	[EXIT_REASON_CPUID]                   = kvm_emulate_cpuid,
-+//	[EXIT_REASON_CPUID]                   = kvm_emulate_cpuid,  // NIKA removed
-+	[EXIT_REASON_CPUID]                   = handle_cpuid,  // NIKA added
++//	[EXIT_REASON_CPUID]                   = kvm_emulate_cpuid,  // me removed
++	[EXIT_REASON_CPUID]                   = handle_cpuid,  // me added
  	[EXIT_REASON_MSR_READ]                = kvm_emulate_rdmsr,
  	[EXIT_REASON_MSR_WRITE]               = kvm_emulate_wrmsr,
  	[EXIT_REASON_INTERRUPT_WINDOW]        = handle_interrupt_window,
@@ -485,8 +485,8 @@
  	[EXIT_REASON_INVLPG]		      = handle_invlpg,
  	[EXIT_REASON_RDPMC]                   = kvm_emulate_rdpmc,
 -	[EXIT_REASON_VMCALL]                  = kvm_emulate_hypercall,
-+//	[EXIT_REASON_VMCALL]                  = kvm_emulate_hypercall,  // NIKA removed
-+	[EXIT_REASON_VMCALL]                  = kvm_handle_invalid_op,  // NIKA added
++//	[EXIT_REASON_VMCALL]                  = kvm_emulate_hypercall,  // me removed
++	[EXIT_REASON_VMCALL]                  = kvm_handle_invalid_op,  // me added
  	[EXIT_REASON_VMCLEAR]		      = handle_vmx_instruction,
  	[EXIT_REASON_VMLAUNCH]		      = handle_vmx_instruction,
  	[EXIT_REASON_VMPTRLD]		      = handle_vmx_instruction,
@@ -494,13 +494,13 @@
  
  	kvm_wait_lapic_expire(vcpu);
  
-+//	u32 in_eax, in_ecx;  // NIKA added
-+//reenter_guest_fast:  // NIKA added
++//	u32 in_eax, in_ecx;  // me added
++//reenter_guest_fast:  // me added
 +
  	/* The actual VMENTER/EXIT is in the .noinstr.text section. */
  	vmx_vcpu_enter_exit(vcpu, __vmx_vcpu_run_flags(vmx));
 +/*
-+	if (vmx_get_exit_reason(vcpu).basic == EXIT_REASON_CPUID) {  // NIKA begin
++	if (vmx_get_exit_reason(vcpu).basic == EXIT_REASON_CPUID) {  // me begin
 +		if (unlikely(vmcs_read32(GUEST_INTERRUPTIBILITY_INFO) & (GUEST_INTR_STATE_STI | GUEST_INTR_STATE_MOV_SS)))
 +			goto reenter_guest_slow;  // If an NMI or interrupt is pending, we MUST hit the slow path
 +
@@ -543,7 +543,7 @@
 +		vmx_complete_interrupts(vmx);
 +		goto reenter_guest_fast;
 +	}
-+reenter_guest_slow:  // NIKA end
++reenter_guest_slow:  // me end
 +*/
  	/* All fields are clean at this point */
  	if (kvm_is_using_evmcs()) {
@@ -554,19 +554,19 @@
   */
  #define COMPILE_OFFSETS
  
-+#include <linux/kvm_host.h>  // NIKA added
++#include <linux/kvm_host.h>  // me added
  #include <linux/kbuild.h>
  #include "vmx/vmx.h"
  #include "svm/svm.h"
  
  static void __used common(void)
  {
-+	OFFSET(OFFSET_KVM_VCPU_ARCH_REGS, kvm_vcpu, arch.regs);  // NIKA added
-+	OFFSET(OFFSET_KVM_VCPU_ARCH_CR2, kvm_vcpu, arch.cr2);  // NIKA added
-+	OFFSET(OFFSET_KVM_VCPU_CPUID_CACHE, kvm_vcpu, cpuid_cache);  // NIKA added
-+	OFFSET(OFFSET_KVM_VCPU_EXT_CPUID_CACHE, kvm_vcpu, ext_cpuid_cache);  // NIKA added
-+	OFFSET(OFFSET_VCPU_VMX_LOADED_VMCS, vcpu_vmx, loaded_vmcs);  // NIKA added
-+	OFFSET(OFFSET_LOADED_VMCS_LAUNCHED, loaded_vmcs, launched);  // NIKA added
++	OFFSET(OFFSET_KVM_VCPU_ARCH_REGS, kvm_vcpu, arch.regs);  // me added
++	OFFSET(OFFSET_KVM_VCPU_ARCH_CR2, kvm_vcpu, arch.cr2);  // me added
++	OFFSET(OFFSET_KVM_VCPU_CPUID_CACHE, kvm_vcpu, cpuid_cache);  // me added
++	OFFSET(OFFSET_KVM_VCPU_EXT_CPUID_CACHE, kvm_vcpu, ext_cpuid_cache);  // me added
++	OFFSET(OFFSET_VCPU_VMX_LOADED_VMCS, vcpu_vmx, loaded_vmcs);  // me added
++	OFFSET(OFFSET_LOADED_VMCS_LAUNCHED, loaded_vmcs, launched);  // me added
 +
  	if (IS_ENABLED(CONFIG_KVM_AMD)) {
  		BLANK();
@@ -578,8 +578,8 @@
  	 * emulated CPU does not support XSAVE (see kvm_vcpu_reset()).
  	 */
 -	valid_bits = vcpu->arch.guest_supported_xcr0 | XFEATURE_MASK_FP;
-+//	valid_bits = vcpu->arch.guest_supported_xcr0 | XFEATURE_MASK_FP;  // NIKA removed
-+	valid_bits = kvm_caps.supported_xcr0 | XFEATURE_MASK_FP;  // NIKA added
++//	valid_bits = vcpu->arch.guest_supported_xcr0 | XFEATURE_MASK_FP;  // me removed
++	valid_bits = kvm_caps.supported_xcr0 | XFEATURE_MASK_FP;  // me added
  	if (xcr0 & ~valid_bits)
  		return 1;
  
@@ -589,8 +589,8 @@
  
 -		if (!(mcg_cap & MCG_CMCI_P) && (data || !msr_info->host_initiated))
 -			return 1;
-+//		if (!(mcg_cap & MCG_CMCI_P) && (data || !msr_info->host_initiated))  // NIKA removed
-+//			return 1;  // NIKA removed
++//		if (!(mcg_cap & MCG_CMCI_P) && (data || !msr_info->host_initiated))  // me removed
++//			return 1;  // me removed
  		/* An attempt to write a 1 to a reserved bit raises #GP */
  		if (data & ~(MCI_CTL2_CMCI_EN | MCI_CTL2_CMCI_THRESHOLD_MASK))
  			return 1;
@@ -614,7 +614,7 @@
  		if (!guest_cpuid_has(vcpu, X86_FEATURE_XSAVES))
  			return KVM_MSR_RET_UNSUPPORTED;
  
-+		data &= vcpu->arch.guest_supported_xss;  // NIKA added
++		data &= vcpu->arch.guest_supported_xss;  // me added
  		if (data & ~vcpu->arch.guest_supported_xss)
  			return 1;
  		if (vcpu->arch.ia32_xss == data)
@@ -624,8 +624,8 @@
  
 -		if (!(mcg_cap & MCG_CMCI_P) && !host)
 -			return 1;
-+//		if (!(mcg_cap & MCG_CMCI_P) && !host)  // NIKA removed
-+//			return 1;  // NIKA removed
++//		if (!(mcg_cap & MCG_CMCI_P) && !host)  // me removed
++//			return 1;  // me removed
  		offset = array_index_nospec(msr - MSR_IA32_MC0_CTL2,
  					    last_msr + 1 - MSR_IA32_MC0_CTL2);
  		data = vcpu->arch.mci_ctl2_banks[offset];
@@ -656,14 +656,14 @@
  		return 0;
  	}
 -	kvm_queue_exception_p(vcpu, DB_VECTOR, DR6_BS);
-+	unsigned long next_rip = kvm_get_linear_rip(vcpu);  // NIKA begin
++	unsigned long next_rip = kvm_get_linear_rip(vcpu);  // me begin
 +	unsigned long dr6_payload = 0;
 +	if (vcpu->arch.db[0] == next_rip && (vcpu->arch.dr7 & 0x03)) dr6_payload |= DR_TRAP0;
 +	if (vcpu->arch.db[1] == next_rip && (vcpu->arch.dr7 & 0x0C)) dr6_payload |= DR_TRAP1;
 +	if (vcpu->arch.db[2] == next_rip && (vcpu->arch.dr7 & 0x30)) dr6_payload |= DR_TRAP2;
 +	if (vcpu->arch.db[3] == next_rip && (vcpu->arch.dr7 & 0xC0)) dr6_payload |= DR_TRAP3;
-+	kvm_queue_exception_p(vcpu, DB_VECTOR, DR6_BS | dr6_payload);  // NIKA end
-+//	kvm_queue_exception_p(vcpu, DB_VECTOR, DR6_BS);  // NIKA removed
++	kvm_queue_exception_p(vcpu, DB_VECTOR, DR6_BS | dr6_payload);  // me end
++//	kvm_queue_exception_p(vcpu, DB_VECTOR, DR6_BS);  // me removed
  	return 1;
  }
  
@@ -671,7 +671,7 @@
  
  static int emulator_fix_hypercall(struct x86_emulate_ctxt *ctxt)
  {
-+	return X86EMUL_UNHANDLEABLE;  // NIKA added
++	return X86EMUL_UNHANDLEABLE;  // me added
 +
  	struct kvm_vcpu *vcpu = emul_to_vcpu(ctxt);
  	char instruction[3];
@@ -681,7 +681,7 @@
  	int i, r;
  
 -	if (vcpu->arch.guest_state_protected)
-+	if (vcpu->arch.guest_state_protected)  // NIKA exclude for #DB
++	if (vcpu->arch.guest_state_protected)  // me exclude for #DB
  		return -EINVAL;
  
  	vcpu_load(vcpu);
@@ -691,13 +691,13 @@
  	unsigned int len;
  };
  
-+struct cpuid_cache_regs {  // NIKA begin
++struct cpuid_cache_regs {  // me begin
 +	u32 rdy;  // vcpu->cpuid_cache[0x24][0x3F].rdy
 +	u32 eax;
 +	u32 ebx;
 +	u32 ecx;
 +	u32 edx;
-+};  // NIKA end
++};  // me end
 +
  struct kvm_vcpu {
  	struct kvm *kvm;
@@ -707,8 +707,8 @@
  	struct kvm_memory_slot *last_used_slot;
  	u64 last_used_slot_gen;
 +
-+	struct cpuid_cache_regs cpuid_cache[0x25][0x40];  // NIKA added
-+	struct cpuid_cache_regs ext_cpuid_cache[0x08][0x01];  // NIKA added
++	struct cpuid_cache_regs cpuid_cache[0x25][0x40];  // me added
++	struct cpuid_cache_regs ext_cpuid_cache[0x08][0x01];  // me added
  };
  
  /*
